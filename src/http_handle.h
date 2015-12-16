@@ -9,6 +9,8 @@
 class HttpHandleI 
 {
 public:
+    virtual ~HttpHandleI() {}
+
     virtual void Init(const std::string& confpath) = 0;
     virtual void Process(evhtp_request_t *request) = 0;
 
