@@ -11,7 +11,6 @@ RequestBuffer::RequestBuffer()
     : _overload_threshold_usec(1000000)
 {
 }
-#include <boost/thread.hpp>
 
 RequestBuffer::~RequestBuffer()
 {
