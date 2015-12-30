@@ -19,9 +19,8 @@ template <typename T>
 class Workers
 {
 public:
-    Workers(const string& path, int n, RequestBuffer& req_buf)
-        : _confpath(path), _thread_num(n), _request_buffer(req_buf),
-        _handle(boost::make_shared<T>())
+    Workers(const std::string& path, int n, RequestBuffer& req_buf)
+        : _confpath(path), _thread_num(n), _request_buffer(req_buf)
     {
     }
 
@@ -29,13 +28,15 @@ public:
     {
         for (int i = 0; i < _thread_num; i++)
         {
-            _handle->Init(_confpath);
-            boost::thread t(boost::bind(&Workers::Run, this));
+            // 每个线程分配一个handle，避免竞态情形
+            _handles.push_back(boost::make_shared<T>());
+            _handles[i]->Init(_confpath);
+            boost::thread t(boost::bind(&Workers::Run, this, i));
         }
     }
 
 private:
-    void Run()
+    void Run(int id)
     {
         fprintf(stderr, "start worker thread: %ld\n", pthread_self());
         for (;;)
@@ -43,7 +44,7 @@ private:
             evhtp_request_t *request = _request_buffer.ConsumeOne();
             if (request)
             {
-                _handle->Process(request);
+                _handles[id]->Process(request);
                 DeferSendReply(request);
             }
         }
@@ -72,7 +73,7 @@ private:
     std::string _confpath;
     int _thread_num;
     RequestBuffer &_request_buffer;
-    boost::shared_ptr<T> _handle;
+    std::vector<boost::shared_ptr<T> > _handles;
 
 };
 

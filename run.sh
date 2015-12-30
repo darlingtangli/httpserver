@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./bin/gatelogic --config=./conf/config.conf
+./bin/httpserver --config=./conf/config.conf
