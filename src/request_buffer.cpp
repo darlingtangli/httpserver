@@ -55,8 +55,7 @@ bool RequestBuffer::Add(evhtp_request_t *request)
 {
     uint64_t now = TNOWUS;
     uint64_t last = _last_process_timestamp.load();
-    if ((!_queue->empty()) && (last>0) &&
-            (last+_overload_threshold_usec<now))
+    if ((last>0) && (last+_overload_threshold_usec<now))
     {
         DEBUGLOG("|overload|now:"<< now <<"|last:"<<last<<"|"<<now-last);
         return false;
@@ -93,21 +92,14 @@ evhtp_request_t* RequestBuffer::ConsumeOne()
     {
         // 队列中没有取到，阻塞等待有请求过来的通知，然后取一个
         pthread_mutex_lock(&_mutex);
-        while (_queue->empty())
+        while (!_queue->pop(data))
         {
             pthread_cond_wait(&_cond, &_mutex);
         }
         // consume a request
-        if (_queue->pop(data))
-        {
-            req = data.request;
-            _last_process_timestamp.store(data.timestamp);
-            DEBUGLOG(__FILE__<<":"<<__LINE__<<"|trace|consume_from_queue:"<<req<<"|tid:"<<pthread_self());
-        }
-        else
-        {
-            ERRORLOG("|cannot reach here!"<<endl);
-        }
+        req = data.request;
+        _last_process_timestamp.store(data.timestamp);
+        DEBUGLOG(__FILE__<<":"<<__LINE__<<"|trace|consume_from_queue:"<<req<<"|tid:"<<pthread_self());
         pthread_mutex_unlock(&_mutex);
     }
 
