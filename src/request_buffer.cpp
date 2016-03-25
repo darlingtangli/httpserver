@@ -94,6 +94,8 @@ evhtp_request_t* RequestBuffer::ConsumeOne()
         pthread_mutex_lock(&_mutex);
         while (!_queue->pop(data))
         {
+            // 队列空了
+            _last_process_timestamp.store(0);
             pthread_cond_wait(&_cond, &_mutex);
         }
         // consume a request
