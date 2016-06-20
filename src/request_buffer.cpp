@@ -1,7 +1,7 @@
 #include "request_buffer.h"
 
-#include "util/inv_timeprovider.h"
 #include "httpserver_log.h"
+#include "http_util.h"
 
 using namespace std;
 using namespace boost;
@@ -53,7 +53,7 @@ void RequestBuffer::Destroy()
 
 bool RequestBuffer::Add(evhtp_request_t *request)
 {
-    uint64_t now = TNOWUS;
+    uint64_t now = http_util::Timer();
     uint64_t last = _last_process_timestamp.load();
     if ((last>0) && (last+_overload_threshold_usec<now))
     {

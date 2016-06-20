@@ -37,6 +37,8 @@ evthr_t * GetRequestThread(evhtp_request_t * request);
 
 void SetBusyResponse(evhtp_request_t* request);
 
-} // treamad_util
+uint64_t Timer();
+
+} // http_util
 
 #endif // __HTTP_UTIL_H

@@ -9,9 +9,9 @@ INCLUDE = -I$(BOOST_DIR) -I/usr/local/inutil \
 
 LIBS =  -L/usr/local/lib/  -levent -lrt -lssl -lcrypto \
 		/usr/local/inutil/libinvutil.a /usr/local/lib/libevhtp.a  \
-		-lboost_thread -pthread -levent -lssl -lcrypto -levent_openssl -lz -lcurl
+		-lboost_thread -lboost_system -pthread -levent -lssl -lcrypto -levent_openssl -lz -lcurl
 
-objects = ./src/simple_httphandle.o ./src/CompressFilter.o \
+objects = ./src/simple_httphandle.o \
 		  ./src/http_util.o ./src/request_buffer.o 
 
 serverexe = ./src/httpserver.o 

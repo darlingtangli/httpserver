@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <evhtp.h>
 #include "httpserver_log.h"
-#include "CompressFilter.h"
 
 using namespace std;
 
@@ -102,31 +101,13 @@ void AddHttpRsp(evhtp_request_t* request, const HttpHead& head, const std::strin
     evhtp_headers_add_header(request->headers_out, evhtp_header_new("Content-Type", "text/html; charset=UTF-8", 0, 0));
     evhtp_headers_add_header(request->headers_out, evhtp_header_new("Server", "inveno", 0, 0));
     evhtp_headers_add_header(request->headers_out, evhtp_header_new("Cache-Control", "no-cache", 0, 0));
-    evhtp_headers_add_header(request->headers_out, evhtp_header_new("Date", head.gmt.c_str(), 0, 0));
+    evhtp_headers_add_header(request->headers_out, evhtp_header_new("Date", head.gmt.c_str(), 0, 1));
     if(head.keepalive)
     {
         evhtp_headers_add_header(request->headers_out, evhtp_header_new("Connection", "keep-alive", 0, 0));
     }
-    const char *accept_encoding = evhtp_kv_find(request->headers_in, "accept-encoding");
-    if(accept_encoding != NULL && strncmp("invdeflate", accept_encoding, strlen("invdeflate")) == 0)
-    { 
-        CompressFilter filter;
-        filter.compressInit(CompressFilter::DEFLATE);
-        string compbuf;
-        if (!filter.compress((char*)body.data(), body.size(), compbuf, true))
-        {
-            evbuffer_add_printf(request->buffer_out, "%s", body.c_str());
-        }
-        else
-        {
-            evhtp_headers_add_header(request->headers_out, evhtp_header_new("Content-Encoding", "deflate", 0, 0));
-            evbuffer_add(request->buffer_out, compbuf.c_str(), compbuf.length());
-        }
-    }
-    else
-    {
-        evbuffer_add_printf(request->buffer_out, "%s", body.c_str());
-    }
+
+    evbuffer_add_printf(request->buffer_out, "%s", body.c_str());
 
     return;
 }
@@ -150,5 +131,16 @@ void SetBusyResponse(evhtp_request_t* request)
     AddHttpRsp(request, head, "{\"code\":103}\n");
 }
 
-} // treamad_util
+uint64_t Timer()
+{
+    // NOTE: 使用gettimeofday来计时的原因：1. 精度足够；2. 高效；3. 线程安全
+    // 历史上gettimeofday似乎并不是线程安全的，common库中的inv_timeprovider使用了锁来保证线程安全，
+    // 但现在已无必要。
+    // http://www.cppblog.com/Solstice/archive/2014/08/21/139769.html
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return uint64_t(tv.tv_sec)*1000000 + tv.tv_usec;
+}
+
+} // http_util
 
