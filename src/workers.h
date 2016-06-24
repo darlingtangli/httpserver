@@ -53,12 +53,12 @@ private:
     static void DeferSendReply(evhtp_request_t* request)
     {
         evthr* thread = http_util::GetRequestThread(request);
-        evthr_defer(thread, OnRequesProcess, request);
+        evthr_defer(thread, OnRequestProcess, request);
 
         return;
     }
 
-    static void OnRequesProcess(evthr_t* thr, void* cmd_arg, void* shared)
+    static void OnRequestProcess(evthr_t* thr, void* cmd_arg, void* shared)
     {
         evhtp_request_t* request = (evhtp_request_t *)cmd_arg;
         evhtp_send_reply(request, EVHTP_RES_OK);
