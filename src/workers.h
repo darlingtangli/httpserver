@@ -8,19 +8,21 @@
 #ifndef __WORKERS_H
 #define __WORKERS_H
 
-#include <iostream>
 #include <string>
 #include <boost/thread.hpp>
 #include <boost/smart_ptr.hpp>
 #include <boost/bind.hpp>
 #include "request_buffer.h"
 
+namespace inv
+{
+
 template <typename T>
 class Workers
 {
 public:
-    Workers(const std::string& path, int n, RequestBuffer& req_buf)
-        : _confpath(path), _thread_num(n), _request_buffer(req_buf)
+    Workers(int n, RequestBuffer& req_buf)
+        : _thread_num(n), _request_buffer(req_buf)
     {
     }
 
@@ -29,8 +31,8 @@ public:
         for (int i = 0; i < _thread_num; i++)
         {
             // 每个线程分配一个handle，避免竞态情形
-            _handles.push_back(boost::make_shared<T>());
-            _handles[i]->Init(_confpath);
+            _handlers.push_back(boost::make_shared<T>());
+            _handlers[i]->Init();
             boost::thread t(boost::bind(&Workers::Run, this, i));
         }
     }
@@ -44,7 +46,7 @@ private:
             evhtp_request_t *request = _request_buffer.ConsumeOne();
             if (request)
             {
-                _handles[id]->Process(request);
+                _handlers[id]->Process(request);
                 DeferSendReply(request);
             }
         }
@@ -52,8 +54,8 @@ private:
 
     static void DeferSendReply(evhtp_request_t* request)
     {
-        evthr* thread = http_util::GetRequestThread(request);
-        evthr_defer(thread, OnRequestProcess, request);
+        evhtp_connection_t *htpconn = evhtp_request_get_connection(request);
+        evthr_defer(htpconn->thread, OnRequestProcess, request);
 
         return;
     }
@@ -63,19 +65,19 @@ private:
         evhtp_request_t* request = (evhtp_request_t *)cmd_arg;
         evhtp_send_reply(request, EVHTP_RES_OK);
         evhtp_request_resume(request);
-        DEBUGLOG(__FILE__<<":"<<__LINE__<<"|trace|reply_request:"<<request<<"|tid:"<<pthread_self());
 
         return;
     }
     
 
 private:
-    std::string _confpath;
     int _thread_num;
     RequestBuffer &_request_buffer;
-    std::vector<boost::shared_ptr<T> > _handles;
+    std::vector<boost::shared_ptr<HttpHandlerI> > _handlers;
 
 };
+
+} // namespace inv
 
 #endif // __WORKERS_H
 

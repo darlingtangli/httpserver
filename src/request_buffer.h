@@ -13,6 +13,9 @@
 #include <boost/smart_ptr.hpp>
 #include <boost/atomic.hpp>
 
+namespace inv
+{
+
 class RequestBuffer
 {
 public:
@@ -41,5 +44,7 @@ private:
     uint64_t _overload_threshold_usec;
 
 };
+
+} // namespace inv
 
 #endif // __REQUEST_BUFFER_H
