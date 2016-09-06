@@ -53,6 +53,9 @@ uint64_t RequestBuffer::Timer()
 
 bool RequestBuffer::Produce(evhtp_request_t* request)
 {
+    assert(request);
+    if (_shutdown) return false;
+
     uint64_t now = Timer();
     uint64_t last = _last_process_timestamp.load();
     if ((last>0) && (last+_overload_threshold_usec<now))
@@ -78,27 +81,28 @@ bool RequestBuffer::Produce(evhtp_request_t* request)
 evhtp_request_t* RequestBuffer::Consume()
 {
     ReqData data;
-    // 先直接尝试从队列中取一个
+    // firstly try to get item from queue directly 
     if (_queue->pop(data))
     {
         _last_process_timestamp.store(data.timestamp);
     }
-    else
+    // then wait for the request signal and get one if queue is still open
+    else if (!_shutdown)
     {
-        // 队列中没有取到，阻塞等待有请求过来的通知，然后取一个
         int ret = pthread_mutex_lock(&_mutex);
         assert(ret==0);
         while (!_shutdown && !_queue->pop(data))
         {
-            // 队列空了
+            // empty queue, waiting...
             _last_process_timestamp.store(0);
             pthread_cond_wait(&_cond, &_mutex);
         }
-        if (!_shutdown) _last_process_timestamp.store(data.timestamp);
+        _last_process_timestamp.store(data.timestamp);
         // consume a request
         ret = pthread_mutex_unlock(&_mutex);
         assert(ret==0);
     }
+    // queue has been shutdown, no need to wait
 
     return data.request;
 }

@@ -67,7 +67,7 @@ void Proxy::Run()
 
     _workers->Start(6);// TODO
     event_base_loop(evbase, 0);
-    _workers->Stop();
+    _workers->Stop(); // return until all worker threads exit
 
     event_free(ev_sigint);
     evhtp_unbind_socket(evhtp);

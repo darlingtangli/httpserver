@@ -8,15 +8,12 @@ namespace inv
 {
 
 Workers::Workers() 
-    : _terminal(false), _request_buffer(boost::make_shared<RequestBuffer>(100, 3000000))
+    : _request_buffer(boost::make_shared<RequestBuffer>(100, 3000000))
 {
 }
 
 void Workers::Start(int n)
 {
-    //// create request buffer
-    //_request_buffer = boost::make_shared<RequestBuffer>(100, 3000000);
-
     // create worker threads
     for (int i = 0; i < n; i++)
     {
@@ -32,7 +29,6 @@ void Workers::Start(int n)
 
 void Workers::Stop()
 {
-    _terminal = true;
     _request_buffer->Shutdown();
     _threads.join_all();
 
@@ -41,25 +37,21 @@ void Workers::Stop()
 
 bool Workers::AddJob(evhtp_request_t* request)
 {
-    return !_terminal && _request_buffer->Produce(request);
+    return _request_buffer->Produce(request);
 }
 
 void Workers::Run()
 {
     pthread_t tid = pthread_self();
     fprintf(stderr, "start worker thread: %ld\n", tid);
-    while (!_terminal)
+    evhtp_request_t *request = NULL;
+    while ((request=_request_buffer->Consume()) != NULL)
     {
         // TODO
-        evhtp_request_t *request = _request_buffer->Consume();
-        if (!_terminal && request)
-        {
-            fprintf(stderr, "tid:%ld, request:%p\n", tid, request);
-            _handlers[tid]->Process(request);
-            // return job back the proxy thread
-            evhtp_connection_t *htpconn = evhtp_request_get_connection(request);
-            evthr_defer(htpconn->thread, OnRequestProcess, request);
-        }
+        _handlers[tid]->Process(request);
+        // return job back the proxy thread
+        evhtp_connection_t *htpconn = evhtp_request_get_connection(request);
+        evthr_defer(htpconn->thread, OnRequestProcess, request);
     }
     fprintf(stderr, "stop worker thread: %ld\n", tid);
 }

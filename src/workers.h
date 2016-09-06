@@ -33,7 +33,6 @@ private:
     static void OnRequestProcess(evthr_t* thr, void* cmd_arg, void* shared);
 
 private:
-    bool _terminal;
     boost::shared_ptr<RequestBuffer> _request_buffer;
     boost::thread_group _threads;
     std::map<pthread_t, boost::shared_ptr<HttpHandlerI> > _handlers;
