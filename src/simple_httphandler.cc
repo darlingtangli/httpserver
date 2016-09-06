@@ -1,7 +1,5 @@
 #include "simple_httphandler.h"
 
-#include <evhtp.h>
-
 void SimpleHttpHandler::Init()
 {
 }

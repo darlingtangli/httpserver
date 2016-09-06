@@ -9,33 +9,28 @@
 #define __EVHTP_SERVER_H
 
 #include <evhtp.h>
-#include "request_buffer.h"
 
 namespace inv 
 {
 
+class Workers;
+
 class Proxy 
 {
 public:
-    Proxy(RequestBuffer& req_buf)
-        : _request_buffer(req_buf)
+    Proxy(Workers* w) : 
+        _workers(w)
     {
     }
 
-    ~Proxy(){}
-
-    void Start();
+    void Run();
 
 private:
-
-    bool Dispatch(evhtp_request_t* request);
-
-    static void AppInitThread(evhtp_t* htp, evthr_t* thread, void* arg);
+    static void Sigint(int sig, short why, void* data);
     static void OnRequest(evhtp_request_t* request, void* arg);
 
 private:
-    RequestBuffer &_request_buffer;
-
+    Workers*  _workers;
 };
 
 } // namespace inv;

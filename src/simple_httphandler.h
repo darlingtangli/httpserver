@@ -1,6 +1,6 @@
 /**
  * @file simple_httphandler.h
- * @brief 处理http请求类
+ * @brief a simple http handler for sample
  * @author litang
  * @version 1.0
  * @date 2015-11-02

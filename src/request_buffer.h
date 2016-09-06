@@ -19,24 +19,26 @@ namespace inv
 class RequestBuffer
 {
 public:
-    RequestBuffer();
-    ~RequestBuffer();
+    RequestBuffer(size_t s, uint64_t t);
+    ~RequestBuffer(); 
 
-    int Init(size_t size, uint64_t time);
-    bool Add(evhtp_request_t *request);
-    evhtp_request_t* ConsumeOne();
+    void Shutdown();
+    bool Produce(evhtp_request_t* request);
+    evhtp_request_t* Consume();
 
 private:
     struct ReqData
     {
         evhtp_request_t *request;
         uint64_t timestamp;
+        ReqData() : request(NULL), timestamp(0) {}
     };
 
 private:
-    void Destroy();
+    static uint64_t Timer();
 
 private:
+    bool _shutdown;
     pthread_cond_t _cond;
     pthread_mutex_t _mutex;
     boost::shared_ptr<boost::lockfree::queue<ReqData, boost::lockfree::fixed_sized<true> > > _queue;

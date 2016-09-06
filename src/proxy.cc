@@ -1,28 +1,31 @@
 #include "proxy.h"
+
+#include <signal.h>
 #include <string>
-#include "request_buffer.h"
+#include "workers.h"
+
+using namespace std;
 
 namespace inv 
 {
 
-void Proxy::Start() 
+void Proxy::Run() 
 {
-    std::string http_ip = "0.0.0.0";
+    string http_ip = "0.0.0.0";
     int http_port = 8899;
     int http_backlog = 1024;
     int http_thread_num = 1;
     int ssl = 0;
-    std::string pemfile = "./conf/ssl.key";
-    std::string privfile = "./conf/ssl.key";
-    std::string cafile = "./conf/ssl.crt";
-    std::string capath = "./";
-    std::string ciphers = "AES256+RSA:HIGH:+MEDIUM:+LOW";
+    string pemfile = "./conf/ssl.key";
+    string privfile = "./conf/ssl.key";
+    string cafile = "./conf/ssl.crt";
+    string capath = "./";
+    string ciphers = "AES256+RSA:HIGH:+MEDIUM:+LOW";
 
-    evbase_t          * evbase;
-    evhtp_t           * evhtp;
-
-    evbase            = event_base_new();
-    evhtp             = evhtp_new(evbase, NULL);
+    evbase_t* evbase = event_base_new();
+    evhtp_t* evhtp  = evhtp_new(evbase, NULL);
+    event* ev_sigint = evsignal_new(evbase, SIGINT, Sigint, evbase);
+    evsignal_add(ev_sigint, NULL);
 
     if(ssl)
     {
@@ -53,26 +56,36 @@ void Proxy::Start()
     }
 
     evhtp_set_gencb(evhtp, OnRequest, this);
-    evhtp_use_threads(evhtp, AppInitThread, http_thread_num, NULL);
-    evhtp_bind_socket(evhtp, http_ip.c_str(), http_port, http_backlog);
+    evhtp_use_threads(evhtp, NULL, http_thread_num, NULL);
+    int ret = evhtp_bind_socket(evhtp, http_ip.c_str(), http_port, http_backlog);
+    if (ret != 0)
+    {
+        fprintf(stderr, "bind on %s:%d failed!\n", http_ip.c_str(), http_port);
+        exit(0);
+    }
+    fprintf(stderr, "pid: %d, listen on %s:%d\n", getpid(), http_ip.c_str(), http_port);
 
+    _workers->Start(6);// TODO
     event_base_loop(evbase, 0);
+    _workers->Stop();
+
+    event_free(ev_sigint);
+    evhtp_unbind_socket(evhtp);
+    evhtp_free(evhtp);
+    event_base_free(evbase);
+
 }
 
-bool Proxy::Dispatch(evhtp_request_t* request)
+void Proxy::Sigint(int sig, short why, void* data)
 {
-    return _request_buffer.Add(request);
-}
-
-void Proxy::AppInitThread(evhtp_t* htp, evthr_t* thread, void* arg) 
-{
-    fprintf(stderr, "start proxy thread: %ld\n", pthread_self());
+    event_base_loopexit((evbase_t*)data, NULL);
 }
 
 void Proxy::OnRequest(evhtp_request_t * request, void * arg) 
 {
-    Proxy *server = (Proxy*)arg;
-    if (server->Dispatch(request))
+    // TODO fix http return 1 bug
+    Proxy *proxy = (Proxy*)arg;
+    if (proxy->_workers->AddJob(request))
     {
         evhtp_request_pause(request);
     }
