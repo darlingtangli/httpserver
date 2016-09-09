@@ -7,20 +7,18 @@
 namespace inv
 {
 
-Workers::Workers() 
-    : _request_buffer(boost::make_shared<RequestBuffer>(100, 3000000))
+void Workers::Start()
 {
-}
-
-void Workers::Start(int n)
-{
+    // create request buffer
+    _request_buffer = boost::make_shared<RequestBuffer>(_options.request_buffer_size, _options.overload_threshold_usec);
+    
     // create worker threads
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < _options.thread_num; i++)
     {
         // create a handler for each thread to avoid race condition
         boost::thread* t = _threads.create_thread(boost::bind(&Workers::Run, this));
         pthread_t tid = t->native_handle();
-        _handlers[tid].reset(HttpHandlerFactory::Instance().Create("id"));// TODO config
+        _handlers[tid].reset(HttpHandlerFactory::Instance().Create(_options.handler_id));
         _handlers[tid]->Init();
     }
 
@@ -32,12 +30,17 @@ void Workers::Stop()
     _request_buffer->Shutdown();
     _threads.join_all();
 
+    for (ThreadHandlerMap::iterator it = _handlers.begin(); it != _handlers.end(); ++it)
+    {
+        it->second->Destroy();
+    }
+
     return;
 }
 
 bool Workers::AddJob(evhtp_request_t* request)
 {
-    return _request_buffer->Produce(request);
+    return _request_buffer && _request_buffer->Produce(request);
 }
 
 void Workers::Run()
@@ -47,7 +50,6 @@ void Workers::Run()
     evhtp_request_t *request = NULL;
     while ((request=_request_buffer->Consume()) != NULL)
     {
-        // TODO
         _handlers[tid]->Process(request);
         // return job back the proxy thread
         evhtp_connection_t *htpconn = evhtp_request_get_connection(request);

@@ -22,16 +22,12 @@ RequestBuffer::RequestBuffer(size_t s, uint64_t t)
         fprintf(stderr, "pthread_mutex_init failed\n");
         exit(0);
     }
-
-    fprintf(stderr, "RequestBuffer Construct\n");
 }
 
 RequestBuffer::~RequestBuffer()
 {
     pthread_cond_destroy(&_cond);
     pthread_mutex_destroy(&_mutex);
-
-    fprintf(stderr, "RequestBuffer Destruct\n");
 }
 
 void RequestBuffer::Shutdown()
