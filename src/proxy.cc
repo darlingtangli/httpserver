@@ -45,7 +45,7 @@ void Proxy::Run()
     }
 
     evhtp_set_gencb(evhtp, OnRequest, this);
-    evhtp_use_threads(evhtp, NULL, _options.thread_num, NULL);
+    evhtp_use_threads_wexit(evhtp, NULL, NULL, _options.thread_num, NULL);
     int ret = evhtp_bind_socket(evhtp, _options.ip.c_str(), _options.port, _options.backlog);
     if (ret != 0)
     {
