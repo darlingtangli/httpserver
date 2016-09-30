@@ -5,4 +5,4 @@ libevhtp-based http server with overload preventing
 * [libevent](http://libevent.org/) 
 * [libevhtp](https://github.com/ellzey/libevhtp)
 * [openssl](https://www.openssl.org/)
-* [ssdb](http://www.boost.org/)
+* [boost](http://www.boost.org/)
