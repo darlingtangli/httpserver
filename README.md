@@ -1,7 +1,7 @@
-# httpserver
-libevhtp-based http server with overload preventing
+# Overview
+带过载保护的HTTP Server框架
 
-# dependence
+# Dependence
 * [libevent](http://libevent.org/) 
 * [libevhtp](https://github.com/ellzey/libevhtp)
 * [openssl](https://www.openssl.org/)
