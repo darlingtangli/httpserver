@@ -8,7 +8,7 @@ namespace inv
 {
 
 RequestBuffer::RequestBuffer(size_t s, uint64_t t) 
-    : _shutdown(false), _queue(make_shared<queue<ReqData, fixed_sized<true> > >(s)),
+    : _shutdown(false), _queue(boost::make_shared<queue<ReqData, fixed_sized<true> > >(s)),
     _overload_threshold_usec(t)
 {
     if (pthread_cond_init(&_cond, NULL) != 0)

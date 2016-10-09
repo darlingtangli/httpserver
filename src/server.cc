@@ -13,6 +13,7 @@ int main(int argc, char ** argv)
     ProxyOptions proxy_options;
     WorkersOptions workers_options;
     workers_options.handler_id = handler_id;
+    workers_options.thread_num = 8;
 
     // regist http handle
     HttpHandlerFactory::Instance().Regist<SimpleHttpHandler>(handler_id);

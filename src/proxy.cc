@@ -1,6 +1,7 @@
 #include "proxy.h"
 
 #include <signal.h>
+#include <evhtp.h>
 #include <string>
 #include "workers.h"
 
@@ -16,6 +17,7 @@ void Proxy::Run()
     event* ev_sigint = evsignal_new(evbase, SIGINT, Sigint, evbase);
     evsignal_add(ev_sigint, NULL);
 
+#ifndef EVHTP_DISABLE_SSL
     if(_options.https)
     {
         // use https
@@ -43,6 +45,7 @@ void Proxy::Run()
 
         evhtp_ssl_init(evhtp, &scfg);
     }
+#endif
 
     evhtp_set_gencb(evhtp, OnRequest, this);
     evhtp_use_threads_wexit(evhtp, NULL, NULL, _options.thread_num, NULL);

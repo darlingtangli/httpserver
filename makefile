@@ -1,6 +1,6 @@
 MAIN=httpserver
 CC=g++ 
-CFLAGS=-Wall -Wno-deprecated -g #-O2 
+CFLAGS=-Wall -std=c++0x -Wno-deprecated -g #-O2 
 BOOST_DIR = /usr/local/include
 
 INCLUDE = -I$(BOOST_DIR) -I /usr/local/include/evhtp/ 
