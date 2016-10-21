@@ -1,4 +1,4 @@
-#include "workers.h"
+#include "worker.h"
 
 #include <boost/bind.hpp>
 #include "request_buffer.h"
@@ -7,7 +7,7 @@
 namespace inv
 {
 
-void Workers::Start()
+void Worker::Start()
 {
     // create request buffer
     _request_buffer = boost::make_shared<RequestBuffer>(_options.request_buffer_size, _options.overload_threshold_usec);
@@ -16,7 +16,7 @@ void Workers::Start()
     for (int i = 0; i < _options.thread_num; i++)
     {
         // create a handler for each thread to avoid race condition
-        boost::thread* t = _threads.create_thread(boost::bind(&Workers::Run, this));
+        boost::thread* t = _threads.create_thread(boost::bind(&Worker::Run, this));
         pthread_t tid = t->native_handle();
         _handlers[tid].reset(HttpHandlerFactory::Instance().Create(_options.handler_id));
         _handlers[tid]->Init();
@@ -25,7 +25,7 @@ void Workers::Start()
     return;
 }
 
-void Workers::Stop()
+void Worker::Stop()
 {
     _request_buffer->Shutdown();
     _threads.join_all();
@@ -38,12 +38,12 @@ void Workers::Stop()
     return;
 }
 
-bool Workers::AddJob(evhtp_request_t* request)
+bool Worker::AddJob(evhtp_request_t* request)
 {
     return _request_buffer && _request_buffer->Produce(request);
 }
 
-void Workers::Run()
+void Worker::Run()
 {
     pthread_t tid = pthread_self();
     fprintf(stderr, "start worker thread for %s: %ld\n", _options.handler_id.c_str(), tid);
@@ -58,7 +58,7 @@ void Workers::Run()
     fprintf(stderr, "stop worker thread for %s: %ld\n", _options.handler_id.c_str(), tid);
 }
 
-void Workers::OnRequestProcess(evthr_t* thr, void* cmd_arg, void* shared)
+void Worker::OnRequestProcess(evthr_t* thr, void* cmd_arg, void* shared)
 {
     evhtp_request_t* request = (evhtp_request_t *)cmd_arg;
     evhtp_send_reply(request, EVHTP_RES_OK);

@@ -50,7 +50,7 @@ struct ProxyOptions
         ciphers("AES256+RSA:HIGH:+MEDIUM:+LOW") {}
 };
 
-struct WorkersOptions
+struct WorkerOptions
 {
     // worker thread number
     int thread_num;
@@ -69,7 +69,7 @@ struct WorkersOptions
     // the handler used to process http request
     std::string handler_id;
 
-    WorkersOptions() :
+    WorkerOptions() :
         thread_num(4),
         request_buffer_size(1000),
         overload_threshold_usec(3000000) {}

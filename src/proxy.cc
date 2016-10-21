@@ -3,30 +3,30 @@
 #include <signal.h>
 #include <evhtp.h>
 #include <string>
-#include "workers.h"
+#include "worker.h"
 
 using namespace std;
 
 namespace inv 
 {
 
-Proxy& Proxy::Route(const string& path, Workers* workers)
+Proxy& Proxy::Route(const string& path, Worker* worker)
 {
-    assert(workers);
+    assert(worker);
 
-    _path_workers_map[path] = workers;
+    _path_worker_map[path] = worker;
 
-    bool has_workers = false;
-    for (size_t i = 0; i < _workers_vec.size(); i++)
+    bool has_worker = false;
+    for (size_t i = 0; i < _worker_vec.size(); i++)
     {
-        if (_workers_vec[i] == workers)
+        if (_worker_vec[i] == worker)
         {
-            has_workers = true;
+            has_worker = true;
             break;
         }
     }
 
-    if (!has_workers) _workers_vec.push_back(workers);
+    if (!has_worker) _worker_vec.push_back(worker);
 
     return *this;
 }
@@ -78,18 +78,18 @@ void Proxy::Run()
     }
     fprintf(stderr, "pid: %d, listen on %s:%d\n", getpid(), _options.ip.c_str(), _options.port);
 
-    // start all workers
-    for (size_t i = 0; i < _workers_vec.size(); i++) 
+    // start all worker
+    for (size_t i = 0; i < _worker_vec.size(); i++) 
     {
-        _workers_vec[i]->Start();
+        _worker_vec[i]->Start();
     }
 
     event_base_loop(evbase, 0);
 
-    // stop all workers
-    for (size_t i = 0; i < _workers_vec.size(); i++) 
+    // stop all worker
+    for (size_t i = 0; i < _worker_vec.size(); i++) 
     {
-        _workers_vec[i]->Stop(); // return until all worker threads exit
+        _worker_vec[i]->Stop(); // return until all worker threads exit
     }
 
     event_free(ev_sigint);
@@ -109,8 +109,8 @@ void Proxy::OnRequest(evhtp_request_t* request, void * arg)
     Proxy *proxy = (Proxy*)arg;
     string the_path;
     if (request->uri->path->file) the_path = request->uri->path->file;
-    PathWorkersMap::iterator it = proxy->_path_workers_map.find(the_path);
-    if (it == proxy->_path_workers_map.end())
+    PathWorkerMap::iterator it = proxy->_path_worker_map.find(the_path);
+    if (it == proxy->_path_worker_map.end())
     {
         // unrouted path, add your own overload response info 
         evhtp_headers_add_header(request->headers_out, evhtp_header_new("Cache-Control", "no-cache", 0, 0));

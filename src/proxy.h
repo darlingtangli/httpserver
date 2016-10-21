@@ -18,7 +18,7 @@
 namespace inv 
 {
 
-class Workers;
+class Worker;
 
 class Proxy 
 {
@@ -28,7 +28,7 @@ public:
     {
     }
 
-    Proxy& Route(const std::string& path, Workers* wokers);
+    Proxy& Route(const std::string& path, Worker* wokers);
     void   Run();
 
 private:
@@ -36,13 +36,13 @@ private:
     static void OnRequest(evhtp_request_t* request, void* arg);
 
 private:
-    typedef std::map<std::string, Workers*> PathWorkersMap;
-    typedef std::vector<Workers*> WorkersVector;
+    typedef std::map<std::string, Worker*> PathWorkerMap;
+    typedef std::vector<Worker*> WorkerVector;
 
 private:
     ProxyOptions _options;
-    WorkersVector _workers_vec;
-    PathWorkersMap _path_workers_map;
+    WorkerVector _worker_vec;
+    PathWorkerMap _path_worker_map;
 };
 
 } // namespace inv;
