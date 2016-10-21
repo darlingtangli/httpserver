@@ -10,6 +10,27 @@ using namespace std;
 namespace inv 
 {
 
+Proxy& Proxy::Route(const string& path, Workers* workers)
+{
+    assert(workers);
+
+    _path_workers_map[path] = workers;
+
+    bool has_workers = false;
+    for (size_t i = 0; i < _workers_vec.size(); i++)
+    {
+        if (_workers_vec[i] == workers)
+        {
+            has_workers = true;
+            break;
+        }
+    }
+
+    if (!has_workers) _workers_vec.push_back(workers);
+
+    return *this;
+}
+
 void Proxy::Run() 
 {
     evbase_t* evbase = event_base_new();
@@ -57,9 +78,19 @@ void Proxy::Run()
     }
     fprintf(stderr, "pid: %d, listen on %s:%d\n", getpid(), _options.ip.c_str(), _options.port);
 
-    _workers->Start();
+    // start all workers
+    for (size_t i = 0; i < _workers_vec.size(); i++) 
+    {
+        _workers_vec[i]->Start();
+    }
+
     event_base_loop(evbase, 0);
-    _workers->Stop(); // return until all worker threads exit
+
+    // stop all workers
+    for (size_t i = 0; i < _workers_vec.size(); i++) 
+    {
+        _workers_vec[i]->Stop(); // return until all worker threads exit
+    }
 
     event_free(ev_sigint);
     evhtp_unbind_socket(evhtp);
@@ -76,15 +107,25 @@ void Proxy::Sigint(int sig, short why, void* data)
 void Proxy::OnRequest(evhtp_request_t* request, void * arg) 
 {
     Proxy *proxy = (Proxy*)arg;
-    if (proxy->_workers->AddJob(request))
+    string the_path;
+    if (request->uri->path->file) the_path = request->uri->path->file;
+    PathWorkersMap::iterator it = proxy->_path_workers_map.find(the_path);
+    if (it == proxy->_path_workers_map.end())
     {
-        evhtp_request_pause(request);
+        // unrouted path, add your own overload response info 
+        evhtp_headers_add_header(request->headers_out, evhtp_header_new("Cache-Control", "no-cache", 0, 0));
+        evhtp_send_reply(request, EVHTP_RES_NOTIMPL);
     }
-    else
+    else if (!it->second->AddJob(request))
     {
         // overload, add your own overload response info 
         evhtp_headers_add_header(request->headers_out, evhtp_header_new("Cache-Control", "no-cache", 0, 0));
         evhtp_send_reply(request, EVHTP_RES_SERVUNAVAIL);
+    }
+    else
+    {
+        // dispath request to worker according path
+        evhtp_request_pause(request);
     }
     return;
 }

@@ -9,6 +9,9 @@
 #ifndef __EVHTP_SERVER_H
 #define __EVHTP_SERVER_H
 
+#include <string>
+#include <vector>
+#include <map>
 #include <evhtp.h>
 #include "options.h"
 
@@ -20,20 +23,26 @@ class Workers;
 class Proxy 
 {
 public:
-    Proxy(const ProxyOptions& options, Workers* w) : 
-        _options(options), _workers(w)
+    Proxy(const ProxyOptions& options) : 
+        _options(options)
     {
     }
 
-    void Run();
+    Proxy& Route(const std::string& path, Workers* wokers);
+    void   Run();
 
 private:
     static void Sigint(int sig, short why, void* data);
     static void OnRequest(evhtp_request_t* request, void* arg);
 
 private:
+    typedef std::map<std::string, Workers*> PathWorkersMap;
+    typedef std::vector<Workers*> WorkersVector;
+
+private:
     ProxyOptions _options;
-    Workers*  _workers;
+    WorkersVector _workers_vec;
+    PathWorkersMap _path_workers_map;
 };
 
 } // namespace inv;
