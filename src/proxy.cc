@@ -114,12 +114,14 @@ void Proxy::OnRequest(evhtp_request_t* request, void * arg)
     {
         // unrouted path, add your own overload response info 
         evhtp_headers_add_header(request->headers_out, evhtp_header_new("Cache-Control", "no-cache", 0, 0));
+        evbuffer_add_printf(request->buffer_out, "%s", "oops, service unimplement.");
         evhtp_send_reply(request, EVHTP_RES_NOTIMPL);
     }
     else if (!it->second->AddJob(request))
     {
         // overload, add your own overload response info 
         evhtp_headers_add_header(request->headers_out, evhtp_header_new("Cache-Control", "no-cache", 0, 0));
+        evbuffer_add_printf(request->buffer_out, "%s", "oops, server busy.");
         evhtp_send_reply(request, EVHTP_RES_SERVUNAVAIL);
     }
     else
