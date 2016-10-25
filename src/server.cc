@@ -1,8 +1,8 @@
 #include "proxy.h" 
 #include "worker.h"
 #include "options.h"
-#include "simple_httphandler.h"
-#include "complex_httphandler.h"
+#include "simple_http_handler.h"
+#include "complex_http_handler.h"
 
 using namespace std;
 using namespace inv;

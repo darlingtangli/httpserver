@@ -1,15 +1,14 @@
-#include "complex_httphandler.h"
+#include "simple_http_handler.h"
 
-void ComplexHttpHandler::Init()
+void SimpleHttpHandler::Init()
 {
 }
 
-void ComplexHttpHandler::Process(evhtp_request_t *request)
+void SimpleHttpHandler::Process(evhtp_request_t *request)
 {
-    // do something complex
     static int i = 0;
     char buf[256];
-    snprintf(buf, sizeof(buf), "{\"code\": 200, \"data\": [%d]}\n", i+=10);
+    snprintf(buf, sizeof(buf), "{\"code\": 200, \"data\": [%d]}\n", i++);
 
     for (int j = 0; j < 10000; j++)
     {
@@ -22,6 +21,6 @@ void ComplexHttpHandler::Process(evhtp_request_t *request)
     evbuffer_add_printf(request->buffer_out, "%s", buf);
 }
 
-void ComplexHttpHandler::Destroy()
+void SimpleHttpHandler::Destroy()
 {
 }

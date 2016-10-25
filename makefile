@@ -9,7 +9,7 @@ LIBS = -L/usr/local/lib/  -levent -lrt -lssl -lcrypto /usr/local/lib/libevhtp.a 
 	   -levent -lssl -lcrypto -levent_openssl -lboost_thread -lboost_system -pthread
 
 objects = ./src/server.o ./src/proxy.o ./src/worker.o ./src/request_buffer.o \
-		  ./src/simple_httphandler.o ./src/complex_httphandler.o
+		  ./src/simple_http_handler.o ./src/complex_http_handler.o
 
 all: server 
 
