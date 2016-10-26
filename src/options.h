@@ -67,7 +67,7 @@ struct WorkerOptions
     int overload_threshold_usec;
 
     // the handler used to process http request
-    std::string handler_id;
+    int handler_id;
 
     WorkerOptions() :
         thread_num(4),

@@ -32,14 +32,14 @@ public:
 class HttpHandlerFactory
 {
 public:
-    HttpHandlerI* Create(const std::string& id)
+    HttpHandlerI* Create(int id)
     {
         if (_m.find(id) == _m.end()) return NULL;
         return _m[id]();
     }
     
-    template<typename T>
-    void Regist(const std::string& id)
+    template<typename T, int id>
+    void Regist()
     {
         // bind new operator
         _m[id] = boost::lambda::new_ptr<T>();
@@ -52,7 +52,7 @@ public:
     }
 
 private:
-    std::map<std::string, boost::function<inv::HttpHandlerI*()> > _m;
+    std::map<int, boost::function<inv::HttpHandlerI*()> > _m;
 };
 
 } // namespace inv

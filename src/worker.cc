@@ -46,7 +46,7 @@ bool Worker::AddJob(evhtp_request_t* request)
 void Worker::Run()
 {
     pthread_t tid = pthread_self();
-    fprintf(stderr, "start worker thread for %s: %ld\n", _options.handler_id.c_str(), tid);
+    fprintf(stderr, "start worker thread for handler %d: %ld\n", _options.handler_id, tid);
     evhtp_request_t *request = NULL;
     while ((request=_request_buffer->Consume()) != NULL)
     {
@@ -55,7 +55,7 @@ void Worker::Run()
         evhtp_connection_t *htpconn = evhtp_request_get_connection(request);
         evthr_defer(htpconn->thread, OnRequestProcess, request);
     }
-    fprintf(stderr, "stop worker thread for %s: %ld\n", _options.handler_id.c_str(), tid);
+    fprintf(stderr, "stop worker thread for handler %d: %ld\n", _options.handler_id, tid);
 }
 
 void Worker::OnRequestProcess(evthr_t* thr, void* cmd_arg, void* shared)
