@@ -42,6 +42,7 @@ private:
     pthread_cond_t _cond;
     pthread_mutex_t _mutex;
     boost::shared_ptr<boost::lockfree::queue<ReqData, boost::lockfree::fixed_sized<true> > > _queue;
+    boost::atomic<uint32_t> _block_worker_num;
     boost::atomic<uint64_t> _last_process_timestamp;
     uint64_t _overload_threshold_usec;
 

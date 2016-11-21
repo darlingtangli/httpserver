@@ -8,8 +8,11 @@ namespace inv
 {
 
 RequestBuffer::RequestBuffer(size_t s, uint64_t t) 
-    : _shutdown(false), _queue(boost::make_shared<queue<ReqData, fixed_sized<true> > >(s)),
-    _overload_threshold_usec(t)
+    : _shutdown(false), 
+      _queue(boost::make_shared<queue<ReqData, fixed_sized<true> > >(s)),
+      _block_worker_num(0),
+      _last_process_timestamp(0),
+      _overload_threshold_usec(t)
 {
     if (pthread_cond_init(&_cond, NULL) != 0)
     {
@@ -54,7 +57,7 @@ bool RequestBuffer::Produce(evhtp_request_t* request)
 
     uint64_t now = Timer();
     uint64_t last = _last_process_timestamp.load();
-    if ((last>0) && (last+_overload_threshold_usec<now))
+    if ((_block_worker_num==0) && (last+_overload_threshold_usec<now))
     {
         return false;
     }
@@ -80,7 +83,6 @@ evhtp_request_t* RequestBuffer::Consume()
     // firstly try to get item from queue directly 
     if (_queue->pop(data))
     {
-        _last_process_timestamp.store(data.timestamp);
     }
     // then wait for the request signal and get one if queue is still open
     else if (!_shutdown)
@@ -90,15 +92,17 @@ evhtp_request_t* RequestBuffer::Consume()
         while (!_shutdown && !_queue->pop(data))
         {
             // empty queue, waiting...
-            _last_process_timestamp.store(0);
+            ++_block_worker_num;
             pthread_cond_wait(&_cond, &_mutex);
+            --_block_worker_num;
         }
-        _last_process_timestamp.store(data.timestamp);
         // consume a request
         ret = pthread_mutex_unlock(&_mutex);
         assert(ret==0);
     }
     // queue has been shutdown, no need to wait
+    
+    _last_process_timestamp.store(data.timestamp);
 
     return data.request;
 }
