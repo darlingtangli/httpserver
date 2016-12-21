@@ -1,6 +1,6 @@
 /**
  * @file http_handler.h
- * @brief http handler, used by workder thread to handle http request
+ * @brief http handler, used by worker thread to handle http request
  * @author litang
  * @version 2.0
  * @date 2016-09-06
