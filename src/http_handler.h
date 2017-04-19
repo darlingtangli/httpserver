@@ -1,7 +1,7 @@
 /**
  * @file http_handler.h
  * @brief http handler, used by worker thread to handle http request
- * @author litang
+ * @author darlingtangli@gmail.com
  * @version 2.0
  * @date 2016-09-06
  */

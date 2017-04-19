@@ -1,7 +1,7 @@
 /**
  * @file complex_http_handler.h
  * @brief a complex http handler for sample
- * @author litang
+ * @author darlingtangli@gmail.com
  * @version 1.0
  * @date 2016-10-21
  */

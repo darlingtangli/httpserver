@@ -1,7 +1,7 @@
 /**
  * @file request_buffer.h
  * @brief 
- * @author litang
+ * @author darlingtangli@gmail.com
  * @version 1.0
  * @date 2015-11-28
  */

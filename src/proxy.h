@@ -2,7 +2,7 @@
  * @file proxy.h
  * @brief proxy is only responsible to recv http request and send http response
  *        proxy should set http response head and response code
- * @author litang
+ * @author darlingtangli@gmail.com
  * @version 2.0
  * @date 2016-08-29
  */

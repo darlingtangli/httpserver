@@ -2,7 +2,7 @@
  * @file worker.h
  * @brief worker is used to handle http request, it has a request buffer which proxy will store
  *        request, a thread group to do the jobs and a set of handler which ard used by thread group
- * @author litang
+ * @author darlingtangli@gmail.com
  * @version 2.0
  * @date 2016-08-81
  */
